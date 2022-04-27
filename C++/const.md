@@ -67,7 +67,18 @@ int * const name = &value;
 当加入指针或者引用后，情况就变成了3种：
 
 * 这里，第一种情况和第二种情况的意义相同。也就是说，无论`const`关键字放在`int`的前面或者后面，都表示这个`int`值不可变，即这个指针指向的值`value`无法被更改
+
 * 而当`const`关键字放在`*`的后面时，表示的意义就不同了。这里表示这个指针本身的值不可被更改，即这个指针指向的地址不可被修改来重新指向别的`int`值
+
+* 引用的情况要更特殊一点，实际上，只存在常量引用，而不存在引用常量，因为引用本身就是变量的别名。对于上面的语句，引用仅存在前两种情况，即：
+
+  ```
+  const int name = 1;
+  const int & name1 = name;
+  int const & name2 = name;
+  ```
+
+  且两种情况表达的含义相同
 
 当然，一条语句可以同时使用多个`const`关键字，如下：
 
@@ -77,7 +88,7 @@ const int const * const name = value;
 
 这条语句表示`int`值和指针指向的地址都不可变。当前，前面两个`const`关键字的效果是一样的，可以省略一个。
 
-### 3. 在函数中使用
+### 3.在函数中使用
 
 #### 修饰形参
 
@@ -132,7 +143,107 @@ const int const * const name = value;
 
   * 无法对返回值进行赋值
   * 当使用返回值为另一个变量赋值时，`const`关键字无意义
-  * 多用于操作符的重载函数，不希望返回值被修改
+  * 多用于操作符的重载函数等不希望返回值被修改的情况
+  
+  ```
+  const int * fun();
+
+
+
+### 4.在类中使用
+
+#### 修饰成员变量
+
+* 修饰类的成员变量，表示成员常量，不能被修改
+
+* 成员常量只能够在初始化列表中进行赋值操作
+
+  ```
+  class Test{
+  	//...
+  	const int num;
+  	//...
+  	Test(int x):num(x){
+  		//...
+  	}
+  }
+
+
+
+#### 修饰成员函数
+
+* 修饰类的成员函数，表示这个函数不能改变对象的成员变量，也不能调用类中任何的非`const`成员函数（因为非`const`成员函数可能改变成员变量）
+
+* 对于`const`关键字修饰的类对象、指针或引用，只能够调用类的`const`成员函数。因此，`const`关键字修饰的成员函数的作用就是限制`const`关键字修饰的对象的使用
+
+  ```
+  class Test{
+  	//...
+  	void fun() const; // 添加在函数的末尾
+  	//...
+  }
+
+
+
+#### 修饰类对象、对象指针或对象引用
+
+* 表示该对象（指针指向的对象或引用的对象）为常量，对象中的任何成员不能够被修改
+* 该对象不能够调用类中的任何非`const`成员函数（因为非`const`成员函数可能改变成员变量）
+
+
+
+## 作用范围
+
+* 当将`const`关键字用于声明某个常量时，该标识符自动具备**internal linkage**属性，即只对相同文件内的函数可见，对其他文件中的函数是不可见的。关于内部链接，可以查阅最下面的参考资料
+
+  ```
+  // a.cpp
+  // ...
+  const int num = 0;
+  // ...
+  ```
+
+  ```
+  // b.cpp
+  // ...
+  const int num = 1;
+  // ...
+  ```
+
+  上面的两个`cpp`文件声明了同名的`int`类型常量，但是常量的值不同。若将这两个文件放在一起编译，并不会产生命名冲突，因为这两个常量的作用范围仅在当前的`cpp`文件内（内部链接），外部的文件一般情况下看不到另外的常量，即使它们拥有相同的常量名。
+
+* 稍微复杂的情况：
+
+  ```
+  // a.cpp
+  // ...
+  const char * name = "hi";
+  // ...
+  ```
+
+  ```
+  // b.cpp
+  // ...
+  const char * name = "hi";
+  // ...
+  ```
+
+  此时，若将两个文件一起编译，则会出现重复定义的错误。根据上面讲的`const`关键字的修饰对象，此时`const`关键字修饰的是char，表示`"hi"`这个字符串常量。而`name`指针则被认为是非常量，默认情况下，具有**external linkage**属性，即可以被其它源文件使用，在整个程序内有效，且全局只允许有一个，因此导致了重定义。
+
+
+
+## 内存分配
+
+* 一般情况下，`const`常量位于符号表中，不会为其分配内存空间
+* 当使用常量时，从符号表中取值
+* 当进行需要得到`const`常量地址的操作时，才会为其分配内存空间（且只分配一次）
+* 用`extern`关键字修饰，成为全局常量时，会为其分配空间
+
+
+
+
+
+
 
 
 
@@ -144,7 +255,10 @@ const int const * const name = value;
 
 * https://wenku.baidu.com/view/53a778b4d9ef5ef7ba0d4a7302768e9951e76e2a.html?qq-pf-to=pcqq.c2c
 * https://blog.csdn.net/lovekatherine/article/details/1644971
-* https://blog.csdn.net/Tonny0832/article/details/12558493?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_title~default-0.pc_relevant_antiscanv2&spm=1001.2101.3001.4242.1&utm_relevant_index=3
 * https://blog.csdn.net/hziee_/article/details/1750733
 * https://blog.csdn.net/silently_frog/article/details/96737764
+* https://blog.csdn.net/mznewfacer/article/details/6896946?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-0.pc_relevant_default&spm=1001.2101.3001.4242.1&utm_relevant_index=3
+* https://blog.csdn.net/qq_35599308/article/details/86192311?spm=1001.2101.3001.6650.2&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-2.pc_relevant_paycolumn_v3&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-2.pc_relevant_paycolumn_v3&utm_relevant_index=5
+* https://blog.csdn.net/d137578736/article/details/79033983?spm=1001.2101.3001.6661.1&utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.pc_relevant_aa&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.pc_relevant_aa&utm_relevant_index=1
+* 内部链接与外部链接：https://blog.csdn.net/Tonny0832/article/details/12558493?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_title~default-0.pc_relevant_antiscanv2&spm=1001.2101.3001.4242.1&utm_relevant_index=3
 
