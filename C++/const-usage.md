@@ -241,12 +241,6 @@ const int const * const name = value;
 
 
 
-
-
-
-
-
-
 ## 参考资料
 
 * https://wenku.baidu.com/view/53a778b4d9ef5ef7ba0d4a7302768e9951e76e2a.html?qq-pf-to=pcqq.c2c
