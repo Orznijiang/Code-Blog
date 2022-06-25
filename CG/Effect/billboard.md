@@ -8,13 +8,13 @@ Billboard 是游戏中一个比较常见的效果，其主要功能是让物体�
 
 首先，你需要准备一张面片作为Billboard的载体。注意面片需要直立放置，且正面朝前（平行于XY平面），中心位于（0,0,0）处，不同的放置方式会对后面的线性变换的方式产生影响。
 
-<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/01.png?raw=true" alt="image-20220624222156699" style="zoom:50%;" />
+<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/01.png?raw=true" alt="使用Blender制作的面片" style="zoom:50%;" />
 
 若使用较为成熟的商业引擎，一种较为简单的方法是直接使用引擎内置的模型，如Unity的Quad，该模型在初始状态下就是直立放置。
 
-<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/02.png?raw=true" alt="image-20220624223916050" style="zoom:80%;" />
+<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/02.png?raw=true" alt="使用Unity创建内置Quad" style="zoom:80%;" />
 
-![image-20220624224146895](https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/03.png?raw=true)
+![Unity内置Quad](https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/03.png?raw=true)
 
 此外，还需要准备一张纹理，作为Billboard的贴图内容。
 
@@ -67,7 +67,7 @@ up_dir = normalize(cross(normal_dir, right_dir));
 
 先设定一个可用的up方向，再根据up和normal通过叉乘计算出right方向，然后使用right和normal方向对up方向进行修正。
 
-![image-20220624232858822](https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/04.png?raw=true)
+![建立一个新的坐标系](https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/04.png?raw=true)
 
 这里要注意的是，叉乘的顺序会对结果造成影响，上面是在右手坐标系下的叉乘顺序，对于左手坐标系，应交换叉乘顺序（叉乘永远都是右手定则），即：
 
@@ -120,7 +120,7 @@ fragment_color = result;
 
 这样就完成了Billboard的基本功能，效果大致如下：
 
-<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/05.png?raw=true" alt="image-20220625145548735" style="zoom: 50%;" />
+<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/05.png?raw=true" alt="未开启Blending的Billboard" style="zoom: 50%;" />
 
 对于带有透明通道的纹理，可以开启Blending，以获得更好的效果：
 
@@ -132,7 +132,7 @@ pass.blend_state.should_enable_blending = true;
 
 开启Blending的效果：
 
-<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/06.png?raw=true" alt="image-20220625145846652" style="zoom:50%;" />
+<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/06.png?raw=true" alt="开启Blending的Billboard" style="zoom:50%;" />
 
 
 
@@ -169,7 +169,7 @@ local_pos += up_floating;
 
 如果我们选择将旋转后的面片直接导出为FBX格式，则依旧会出现上面的问题，这可能是因为FBX保留了mesh的旋转信息，实际上面片在模型空间中还是平放的。对此，我们需要将面片的旋转操作应用到mesh的每个顶点上。在Blender中，对旋转后的物体进行下面的操作，或者在编辑模式下进行旋转：
 
-<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/07.png?raw=true" alt="image-20220625151443500" style="zoom:80%;" />
+<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/07.png?raw=true" alt="应用模型变换信息" style="zoom:80%;" />
 
 若直接导出为OBJ格式的模型文件，测试没有上面的问题。
 
@@ -179,7 +179,7 @@ local_pos += up_floating;
 
 透明物体需要按大体从后往前的方式进行绘制，否则会产生混合计算错误的问题。如下，由于人物最先绘制，所以被后绘制的物体遮挡，即使深度上在人物后面（因为关闭了深度写入）：
 
-![image-20220625152404208](https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/08.png?raw=true)
+![错误的渲染顺序](https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/08.png?raw=true)
 
 忽视模型间可能出现的交叉现象，这里根据模型到摄像机的距离大致对渲染队列中的透明对象进行排序：
 
@@ -202,7 +202,7 @@ std::sort(pass.queue.begin(), pass.queue.end(), cmp);
 
 现在透明billboard的渲染就有了较为正确的遮挡关系：
 
-<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/09.png?raw=true" alt="image-20220625155357620" style="zoom: 50%;" />
+<img src="https://github.com/Orznijiang/MyImageBed/blob/main/Code-Blog/CG/Effect/09.png?raw=true" alt="正确的渲染顺序" style="zoom: 50%;" />
 
 
 
